@@ -1,5 +1,6 @@
 package com.spring_security.test_project.config;
 
+import com.spring_security.test_project.enums.Permissions;
 import com.spring_security.test_project.enums.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,14 +17,16 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                .antMatchers(HttpMethod.POST, "/api/**").hasAnyRole(Role.ADMIN.name())
-                .antMatchers(HttpMethod.DELETE, "/api/**").hasAnyRole(Role.ADMIN.name())
+                .antMatchers(HttpMethod.GET, "/api/**").hasAuthority(Permissions.DEVELOPERS_READ.getPermission())
+                .antMatchers(HttpMethod.POST, "/api/**").hasAuthority(Permissions.DEVELOPERS_WRITE.getPermission())
+                .antMatchers(HttpMethod.DELETE, "/api/**").hasAuthority(Permissions.DEVELOPERS_WRITE.getPermission())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -37,12 +40,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 User.builder()
                         .username("admin")
                         .password(passwordEncoder().encode("admin"))
-                        .roles("ADMIN")
+                        .authorities(Role.ADMIN.getAuthorities())
                         .build(),
                 User.builder()
                         .username("user")
                         .password(passwordEncoder().encode("user"))
-                        .roles("USER")
+                        .authorities(Role.USER.getAuthorities())
                         .build()
         );
     }
